@@ -1,0 +1,36 @@
+# API
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20
+
+# LLM / Agents
+openai==1.58.1
+langchain==0.3.13
+langchain-openai==0.2.14
+langchain-community==0.3.13
+langgraph==0.2.59
+tavily-python==0.5.0
+
+# PDF
+docling==2.14.0
+
+# Database
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+pgvector==0.3.6
+alembic==1.14.0
+
+# AWS
+boto3==1.35.86
+
+# Re-ranking
+rank-bm25==0.2.2
+
+# Config / Validation
+pydantic==2.10.3
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+
+# Utils
+httpx==0.28.1
+tenacity==9.0.0

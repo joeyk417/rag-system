@@ -7,6 +7,7 @@ from typing import Any
 
 from fastapi import FastAPI
 
+from app.api.v1.router import router as api_router
 from app.config import settings
 
 
@@ -32,6 +33,9 @@ app = FastAPI(
     description="Multi-tenant document intelligence system",
     lifespan=lifespan,
 )
+
+
+app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health", tags=["health"])

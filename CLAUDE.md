@@ -43,15 +43,15 @@ pytest tests/ -v -k "test_deduplication"          # run a single test by name
 
 `reference_notebooks/` contains 7 Jupyter notebooks that prototype the full system. Read these before implementing each module:
 
-| Notebook | What it demonstrates |
-|----------|---------------------|
-| `01. PageRAG - Data Ingestion.ipynb` | Docling extraction, metadata parsing, SHA-256 dedup, vector store ingest |
-| `02. Data Retrieval and ReRanking.ipynb` | Vector search + BM25 hybrid re-ranking |
-| `03. Agentic PageRAG.ipynb` | LangGraph multi-node orchestration |
-| `04. Corrective RAG (CRAG).ipynb` | grade → rewrite → web search flow |
-| `05. Reflexion Agentic RAG.ipynb` | Multi-hop reasoning |
-| `06. Self-RAG.ipynb` | Hallucination detection + answer quality grading |
-| `07. Adaptive RAG.ipynb` | Routing to different agents based on query type |
+| Notebook                                 | What it demonstrates                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| `01. PageRAG - Data Ingestion.ipynb`     | Docling extraction, metadata parsing, SHA-256 dedup, vector store ingest |
+| `02. Data Retrieval and ReRanking.ipynb` | Vector search + BM25 hybrid re-ranking                                   |
+| `03. Agentic PageRAG.ipynb`              | LangGraph multi-node orchestration                                       |
+| `04. Corrective RAG (CRAG).ipynb`        | grade → rewrite → web search flow                                        |
+| `05. Reflexion Agentic RAG.ipynb`        | Multi-hop reasoning                                                      |
+| `06. Self-RAG.ipynb`                     | Hallucination detection + answer quality grading                         |
+| `07. Adaptive RAG.ipynb`                 | Routing to different agents based on query type                          |
 
 The notebooks use Ollama + ChromaDB locally; production code replaces these with OpenAI + pgvector.
 

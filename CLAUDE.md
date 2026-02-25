@@ -6,7 +6,7 @@ Multi-tenant document intelligence system. Companies upload PDFs; users query th
 
 **Reference client:** Elastomers Australia (EA) — mining screen media manufacturer with engineering drawings, SOPs, formulation registers, and product specs.
 
-**Current state:** No production code exists yet. The spec below is the blueprint. `reference_notebooks/` contains working Jupyter prototypes (using Ollama + ChromaDB locally) that validate the core patterns — read these before implementing any module.
+**Current state:** Tasks 1 (scaffold) and 2 (database) are complete. `reference_notebooks/` contains working Jupyter prototypes (using Ollama + ChromaDB locally) that validate the core patterns — read these before implementing any module.
 
 ---
 
@@ -19,7 +19,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 cp .env.example .env                        # then fill in secrets
 
 # Database
-docker-compose up -d postgres               # start local postgres+pgvector
+docker compose up -d postgres               # start local postgres+pgvector
 python scripts/setup_db.py                  # create schemas, enable pgvector
 python scripts/seed_tenant.py               # create EA tenant record
 
@@ -129,6 +129,15 @@ CREATE TABLE chunks (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE ingest_jobs (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id     UUID,
+    status          TEXT NOT NULL DEFAULT 'pending',
+    error           TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX idx_chunks_embedding ON chunks
     USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX idx_chunks_document_id ON chunks(document_id);
@@ -157,6 +166,8 @@ ADMIN_API_KEY=...
 LOG_LEVEL=INFO
 MAX_RETRIEVAL_K=5
 RETRIEVAL_FETCH_MULTIPLIER=20
+
+TAVILY_API_KEY=tvly-...
 ```
 
 ---
@@ -240,8 +251,8 @@ Phase 2 upgrades to Self-RAG then Adaptive RAG. See `docs/phase2-aws.md`.
 
 Complete in order. Do not skip ahead.
 
-1. **Project scaffold** — structure, requirements.txt, docker-compose, config.py, main.py, `/health`
-2. **Database** — SQLAlchemy models, setup_db.py, Alembic migration, seed EA tenant
+1. ✅ **Project scaffold** — structure, requirements.txt, docker-compose, config.py, main.py, `/health`
+2. ✅ **Database** — SQLAlchemy models (Tenant/Document/Chunk/IngestJob), setup_db.py, Alembic migration, seed EA tenant
 3. **Ingestion pipeline** — pdf_extractor → metadata_parser → chunker → embedder → dedup → pipeline.py → `POST /ingest`
 4. **Retrieval pipeline** — filter_extractor → keyword_generator → vector_store → bm25_ranker → retriever.py
 5. **CRAG agent** — state.py, all nodes, crag_agent.py graph

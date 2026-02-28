@@ -1,19 +1,16 @@
 from __future__ import annotations
 
-# TODO: implement in Task 5
-# LangGraph AgentState TypedDict for CRAG flow:
-#
-# from typing import Annotated
-# from typing_extensions import TypedDict
-# import operator
-#
-# class AgentState(TypedDict):
-#     query: str                              # original user query
-#     rewritten_query: str                    # rewritten query (if retrieval fails grade)
-#     retrieved_docs: list[RetrievedChunk]    # output of retriever.py
-#     is_relevant: bool                       # output of grade node
-#     answer: str                             # final generated answer
-#     sources: list[Source]                   # citations for response
-#     messages: Annotated[list, operator.add] # for LangGraph message accumulation
-#
-# Reference: reference_notebooks/04. Corrective RAG (CRAG).ipynb
+from typing_extensions import TypedDict
+
+from app.schemas.chat import Source
+from app.schemas.retrieval import RetrievedChunk
+
+
+class AgentState(TypedDict):
+    query: str                         # original user query
+    rewritten_query: str               # populated by rewrite_node when grade fails
+    retrieved_docs: list[RetrievedChunk]  # output of retrieve_node (vector search)
+    web_results: str                   # Tavily fallback results as formatted text
+    is_relevant: bool                  # output of grade_node
+    answer: str                        # final generated answer
+    sources: list[Source]              # citations (populated on vector path only)

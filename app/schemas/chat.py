@@ -10,11 +10,11 @@ class Source(BaseModel):
     s3_key: str
 
 
-# TODO: implement in Task 6
-# class ChatRequest(BaseModel):
-#     query: str = Field(min_length=1, max_length=2000)
-#
-# class ChatResponse(BaseModel):
-#     answer: str
-#     sources: list[Source]
-#     query: str
+class ChatRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=2000)
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: list[Source]
+    query: str

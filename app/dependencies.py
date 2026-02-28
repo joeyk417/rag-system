@@ -5,6 +5,8 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.providers.base import BaseLLMProvider
+from app.core.providers.openai_provider import OpenAIProvider
 from app.core.security import verify_admin_key, verify_api_key
 from app.db.models import Tenant
 from app.db.session import AsyncSessionLocal
@@ -29,3 +31,13 @@ async def get_admin(
 ) -> None:
     """Validate X-Admin-Key header (admin-only endpoints)."""
     verify_admin_key(x_admin_key)
+
+
+def get_provider(tenant: Tenant = Depends(get_tenant)) -> BaseLLMProvider:
+    """Return the appropriate LLM provider for this tenant.
+
+    Phase 1: always returns OpenAIProvider.
+    Phase 2 (data_sovereignty=AU): will return BedrockProvider — see docs/phase2-aws.md.
+    """
+    # TODO Phase 2: if tenant.config.get("data_sovereignty") == "AU": return BedrockProvider()
+    return OpenAIProvider()

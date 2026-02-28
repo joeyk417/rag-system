@@ -28,15 +28,19 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-def tenant_session(session: AsyncSession, schema_name: str) -> AsyncSession:
-    """Return a session scoped to the given tenant schema.
+def tenant_session(schema_name: str) -> async_sessionmaker[AsyncSession]:
+    """Return a sessionmaker scoped to the given tenant schema.
 
-    Uses SQLAlchemy's schema_translate_map to route all queries for
-    per-tenant models (Document, Chunk, IngestJob) to the correct schema.
+    Creates a new engine proxy with schema_translate_map applied so all
+    queries for per-tenant models (Document, Chunk, IngestJob) are routed
+    to the correct schema automatically.
 
     Usage::
 
-        ts = tenant_session(session, tenant.schema_name)
-        result = await ts.execute(select(Document))
+        async with tenant_session(tenant.schema_name)() as ts:
+            result = await ts.execute(select(Document))
     """
-    return session.execution_options(schema_translate_map={None: schema_name})
+    tenant_engine = async_engine.execution_options(
+        schema_translate_map={None: schema_name}
+    )
+    return async_sessionmaker(tenant_engine, class_=AsyncSession, expire_on_commit=False)

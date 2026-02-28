@@ -1,7 +1,16 @@
 from __future__ import annotations
 
-# TODO: implement in Task 3
-# Generates embeddings via BaseLLMProvider.embed_batch()
-# Called ONCE at ingest time — embeddings are stored in chunks.embedding
-# NEVER re-embeds at query time (only user query is embedded at query time)
-# Batch size: 100 chunks per API call to stay within token limits
+from app.core.providers.base import BaseLLMProvider
+from app.ingestion.chunker import ChunkData
+
+
+async def embed_chunks(
+    chunks: list[ChunkData],
+    provider: BaseLLMProvider,
+) -> list[list[float]]:
+    """Return embedding vectors for each chunk, in the same order.
+
+    Batching is handled inside provider.embed_batch() (100 texts per call).
+    """
+    texts = [chunk.content for chunk in chunks]
+    return await provider.embed_batch(texts)

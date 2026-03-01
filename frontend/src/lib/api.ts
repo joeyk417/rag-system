@@ -33,12 +33,20 @@ export interface Source {
   title: string | null;
   page_number: number;
   s3_key: string;
+  score: number | null;
+}
+
+export interface TokenUsage {
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
 }
 
 export interface ChatResponse {
   answer: string;
   sources: Source[];
   query: string;
+  usage: TokenUsage | null;
 }
 
 export interface DocumentResponse {

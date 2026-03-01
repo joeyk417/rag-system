@@ -6,7 +6,7 @@ import time
 from openai import AsyncOpenAI
 
 from app.config import settings
-from app.core.providers.base import BaseLLMProvider
+from app.core.providers.base import BaseLLMProvider, LLMUsage
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,9 @@ class OpenAIProvider(BaseLLMProvider):
     def __init__(self) -> None:
         self._client = AsyncOpenAI(api_key=settings.openai_api_key)
 
-    async def generate(self, system_prompt: str, user_message: str, **kwargs: object) -> str:
+    async def generate(
+        self, system_prompt: str, user_message: str, **kwargs: object
+    ) -> tuple[str, LLMUsage | None]:
         start = time.monotonic()
         response = await self._client.chat.completions.create(
             model=settings.openai_llm_model,
@@ -28,17 +30,25 @@ class OpenAIProvider(BaseLLMProvider):
             **kwargs,  # type: ignore[arg-type]
         )
         latency_ms = int((time.monotonic() - start) * 1000)
-        usage = response.usage
+        raw_usage = response.usage
+        usage = (
+            LLMUsage(
+                input_tokens=raw_usage.prompt_tokens,
+                output_tokens=raw_usage.completion_tokens,
+            )
+            if raw_usage
+            else None
+        )
         logger.info(
             "OpenAI generate",
             extra={
                 "model": settings.openai_llm_model,
-                "prompt_tokens": usage.prompt_tokens if usage else None,
-                "completion_tokens": usage.completion_tokens if usage else None,
+                "prompt_tokens": usage.input_tokens if usage else None,
+                "completion_tokens": usage.output_tokens if usage else None,
                 "latency_ms": latency_ms,
             },
         )
-        return response.choices[0].message.content or ""
+        return response.choices[0].message.content or "", usage
 
     async def embed(self, text: str) -> list[float]:
         vectors = await self.embed_batch([text])

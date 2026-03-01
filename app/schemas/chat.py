@@ -8,6 +8,13 @@ class Source(BaseModel):
     title: str | None
     page_number: int
     s3_key: str
+    score: float | None = None  # relevance score 0–1 (1 = perfect match)
+
+
+class TokenUsage(BaseModel):
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
 
 
 class ChatRequest(BaseModel):
@@ -18,3 +25,4 @@ class ChatResponse(BaseModel):
     answer: str
     sources: list[Source]
     query: str
+    usage: TokenUsage | None = None

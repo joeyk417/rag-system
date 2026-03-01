@@ -16,7 +16,7 @@ from app.agent.nodes import (
 from app.agent.state import AgentState
 from app.core.providers.base import BaseLLMProvider
 from app.db.models import Tenant
-from app.schemas.chat import Source
+from app.schemas.chat import Source, TokenUsage
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +53,8 @@ async def run_crag(
     query: str,
     tenant: Tenant,
     provider: BaseLLMProvider,
-) -> tuple[str, list[Source]]:
-    """Run the CRAG pipeline and return (answer, sources).
+) -> tuple[str, list[Source], TokenUsage | None]:
+    """Run the CRAG pipeline and return (answer, sources, usage).
 
     Builds a new compiled graph per call (graphs are lightweight; tenant/provider
     bindings live in node closures, not in graph state).
@@ -69,6 +69,7 @@ async def run_crag(
         "is_relevant": False,
         "answer": "",
         "sources": [],
+        "usage": None,
     }
 
     logger.info(
@@ -80,6 +81,7 @@ async def run_crag(
 
     answer = final_state.get("answer", "")
     sources = final_state.get("sources", [])
+    usage: TokenUsage | None = final_state.get("usage")  # type: ignore[assignment]
 
     logger.info(
         "agent.crag.done",
@@ -87,7 +89,8 @@ async def run_crag(
             "tenant": tenant.tenant_id,
             "n_sources": len(sources),
             "answer_chars": len(answer),
+            "total_tokens": usage.total_tokens if usage else None,
         },
     )
 
-    return answer, sources
+    return answer, sources, usage

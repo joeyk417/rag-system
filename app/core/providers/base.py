@@ -1,6 +1,19 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+
+@dataclass
+class LLMUsage:
+    """Token usage returned by a generate() call."""
+
+    input_tokens: int
+    output_tokens: int
+
+    @property
+    def total_tokens(self) -> int:
+        return self.input_tokens + self.output_tokens
 
 
 class BaseLLMProvider(ABC):
@@ -11,8 +24,10 @@ class BaseLLMProvider(ABC):
     """
 
     @abstractmethod
-    async def generate(self, system_prompt: str, user_message: str, **kwargs: object) -> str:
-        """Generate a text response."""
+    async def generate(
+        self, system_prompt: str, user_message: str, **kwargs: object
+    ) -> tuple[str, LLMUsage | None]:
+        """Generate a text response. Returns (answer, usage)."""
         ...
 
     @abstractmethod

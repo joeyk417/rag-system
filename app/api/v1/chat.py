@@ -21,5 +21,5 @@ async def chat(
 
     Returns the generated answer and source document citations.
     """
-    answer, sources = await run_crag(body.query, tenant, provider)
-    return ChatResponse(answer=answer, sources=sources, query=body.query)
+    answer, sources, usage = await run_crag(body.query, tenant, provider)
+    return ChatResponse(answer=answer, sources=sources, query=body.query, usage=usage)

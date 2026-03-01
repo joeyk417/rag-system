@@ -13,7 +13,7 @@ from app.config import settings
 from app.core.providers.base import BaseLLMProvider
 from app.db.models import Tenant
 from app.retrieval import retriever
-from app.schemas.chat import Source
+from app.schemas.chat import Source, TokenUsage
 from app.schemas.retrieval import RetrievedChunk
 
 logger = logging.getLogger(__name__)
@@ -199,16 +199,27 @@ def make_generate_node(tenant: Tenant, provider: BaseLLMProvider) -> _Node:
 
         user_message = f"Question: {query}\n\nContext:\n{context}"
 
-        answer = await provider.generate(system_prompt, user_message)
+        answer, llm_usage = await provider.generate(system_prompt, user_message)
+        usage = (
+            TokenUsage(
+                input_tokens=llm_usage.input_tokens,
+                output_tokens=llm_usage.output_tokens,
+                total_tokens=llm_usage.total_tokens,
+            )
+            if llm_usage
+            else None
+        )
         logger.info(
             "agent.generate",
             extra={
                 "tenant": tenant.tenant_id,
                 "path": "vector" if (is_relevant and docs) else "web",
                 "n_sources": len(sources),
+                "input_tokens": usage.input_tokens if usage else None,
+                "output_tokens": usage.output_tokens if usage else None,
             },
         )
-        return {"answer": answer, "sources": sources}
+        return {"answer": answer, "sources": sources, "usage": usage}
 
     return generate_node
 
@@ -261,12 +272,15 @@ def _build_vector_context(docs: list[RetrievedChunk]) -> tuple[str, list[Source]
 
         parts.append(block)
         total_chars += len(block)
+        # similarity_score is cosine distance (0=identical); convert to 0–1 relevance
+        relevance = round(max(0.0, 1.0 - doc.similarity_score), 4)
         sources.append(
             Source(
                 doc_number=doc.doc_number,
                 title=doc.title,
                 page_number=doc.page_number,
                 s3_key=doc.s3_key,
+                score=relevance,
             )
         )
 

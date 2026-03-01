@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +35,16 @@ class Settings(BaseSettings):
 
     # Web search
     tavily_api_key: str = Field(default="")
+
+    # CORS (comma-separated origins, e.g. "http://localhost:3000,https://staging.example.com")
+    cors_origins: list[str] = Field(default=["*"])
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors(cls, v: str | list) -> list[str]:
+        if isinstance(v, str):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
 
 
 settings = Settings()

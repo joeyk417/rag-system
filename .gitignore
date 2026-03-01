@@ -38,3 +38,7 @@ migrations/versions/*.pyc
 
 # Docker
 *.log
+
+# FrontEnd
+frontend/node_modules/*
+frontend/.next/*

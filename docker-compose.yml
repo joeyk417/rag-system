@@ -15,5 +15,14 @@ services:
       timeout: 5s
       retries: 5
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+
 volumes:
   pgdata:

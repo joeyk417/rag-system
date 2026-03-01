@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import router as api_router
 from app.config import settings
@@ -34,6 +35,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Content-Type", "X-API-Key", "X-Admin-Key"],
+)
 
 app.include_router(api_router, prefix="/api/v1")
 

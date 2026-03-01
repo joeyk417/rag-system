@@ -259,3 +259,4 @@ Complete in order. Do not skip ahead.
 6. **Chat API** — `POST /chat`, tenant system prompt, source citations
 7. **Tests** — unit tests per module + integration test (ingest → query → verify)
 8. **Validation** — run all queries in `docs/validation-queries.md` against EA sample docs
+9. Mini UI - create a mini UI for Testers and Business Users to test all functionalities

@@ -143,9 +143,8 @@ def make_web_search_node() -> _Node:
     async def web_search_node(state: AgentState) -> dict[str, Any]:
         api_key = settings.tavily_api_key
         if not api_key:
-            raise ValueError(
-                "TAVILY_API_KEY is not set — cannot perform web search fallback."
-            )
+            logger.warning("agent.web_search.skipped: TAVILY_API_KEY not set")
+            return {"web_results": ""}
 
         query = state.get("rewritten_query") or state["query"]
         logger.info("agent.web_search", extra={"query": query})
@@ -155,10 +154,14 @@ def make_web_search_node() -> _Node:
 
         loop = asyncio.get_event_loop()
         client = TavilyClient(api_key=api_key)
-        results = await loop.run_in_executor(
-            None,
-            lambda: client.search(query, max_results=3),
-        )
+        try:
+            results = await loop.run_in_executor(
+                None,
+                lambda: client.search(query, max_results=3),
+            )
+        except Exception as exc:
+            logger.warning("agent.web_search.failed", extra={"error": str(exc)})
+            return {"web_results": ""}
 
         formatted = _format_tavily_results(results)
         logger.info(

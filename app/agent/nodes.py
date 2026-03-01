@@ -89,7 +89,7 @@ def make_grade_node(provider: BaseLLMProvider) -> _Node:
         )
 
         try:
-            raw = await provider.generate(
+            raw, _ = await provider.generate(
                 system_prompt,
                 user_message,
                 response_format={"type": "json_object"},
@@ -123,7 +123,7 @@ def make_rewrite_node(provider: BaseLLMProvider) -> _Node:
         )
         user_message = f"Original question: {original}"
 
-        rewritten = await provider.generate(system_prompt, user_message)
+        rewritten, _ = await provider.generate(system_prompt, user_message)
         rewritten = rewritten.strip().strip('"').strip("'")
         logger.info(
             "agent.rewrite",

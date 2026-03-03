@@ -215,7 +215,11 @@ START → retrieve → grade → [relevant]     → generate → END
                           → [not relevant] → rewrite  → web_search → generate → END
 ```
 
-Phase 2 upgrades to Self-RAG then Adaptive RAG. See `docs/phase2-aws.md`.
+Later phases upgrade the agent progressively:
+- Phase 2 (Reflexion): multi-hop iterative reasoning — see `docs/phase2-reflexion.md`
+- Phase 3 (Self-RAG): hallucination detection + answer quality grading — see `docs/phase3-self-rag.md`
+- Phase 4 (Adaptive RAG): multi-source routing (vector / web / SQL) — see `docs/phase4-adaptive-rag.md`
+- Phase 5 (AWS): production deployment, Bedrock provider, CI/CD — see `docs/phase5-aws.md`
 
 ---
 
@@ -253,10 +257,20 @@ Complete in order. Do not skip ahead.
 
 1. ✅ **Project scaffold** — structure, requirements.txt, docker-compose, config.py, main.py, `/health`
 2. ✅ **Database** — SQLAlchemy models (Tenant/Document/Chunk/IngestJob), setup_db.py, Alembic migration, seed EA tenant
-3. **Ingestion pipeline** — pdf_extractor → metadata_parser → chunker → embedder → dedup → pipeline.py → `POST /ingest`
-4. **Retrieval pipeline** — filter_extractor → keyword_generator → vector_store → bm25_ranker → retriever.py
-5. **CRAG agent** — state.py, all nodes, crag_agent.py graph
-6. **Chat API** — `POST /chat`, tenant system prompt, source citations
-7. **Tests** — unit tests per module + integration test (ingest → query → verify)
-8. **Validation** — run all queries in `docs/validation-queries.md` against EA sample docs
-9. Mini UI - create a mini UI for Testers and Business Users to test all functionalities
+3. ✅ **Ingestion pipeline** — pdf_extractor → metadata_parser → chunker → embedder → dedup → pipeline.py → `POST /ingest`
+4. ✅ **Retrieval pipeline** — filter_extractor → keyword_generator → vector_store → bm25_ranker → retriever.py
+5. ✅ **CRAG agent** — state.py, all nodes, crag_agent.py graph
+6. ✅ **Chat API** — `POST /chat`, tenant system prompt, source citations
+7. ✅ **Tests** — unit tests per module + integration test (ingest → query → verify)
+8. ✅ **Validation** — run all queries in `docs/validation-queries.md` against EA sample docs
+9. ✅ **Mini UI** — Next.js 14 + Tailwind in `frontend/`
+
+## Phases Overview
+
+| Phase | Focus | Reference Notebook | Doc |
+|-------|-------|--------------------|-----|
+| 1 | CRAG agent + full API + UI | NB 01–04 | (this file) |
+| 2 | Reflexion — multi-hop iterative reasoning | NB 05 | `docs/phase2-reflexion.md` |
+| 3 | Self-RAG — hallucination detection + quality grading | NB 06 | `docs/phase3-self-rag.md` |
+| 4 | Adaptive RAG — multi-source routing | NB 07 | `docs/phase4-adaptive-rag.md` |
+| 5 | AWS production deployment + Bedrock + CI/CD | — | `docs/phase5-aws.md` |

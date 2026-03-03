@@ -108,7 +108,7 @@ async def test_ingest_chat_delete_flow() -> None:
 
             # Step 3: Chat query
             sources = [Source(doc_number="EA-SOP-001", title="Screen Installation", page_number=5, s3_key="ea/sop.pdf")]
-            with patch("app.api.v1.chat.run_crag", new=AsyncMock(return_value=("The torque is 370 Nm.", sources))):
+            with patch("app.api.v1.chat.run_crag", new=AsyncMock(return_value=("The torque is 370 Nm.", sources, None))):
                 response = await client.post(
                     "/api/v1/chat",
                     json={"query": "What torque for M20 Grade 10.9 bolts lubricated?"},

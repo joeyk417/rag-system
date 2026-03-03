@@ -42,7 +42,7 @@ async def test_chat_returns_answer() -> None:
     provider = _make_provider()
     sources = [Source(doc_number="EA-SOP-001", title="Guide", page_number=3, s3_key="ea/sop.pdf")]
 
-    with patch("app.api.v1.chat.run_crag", new=AsyncMock(return_value=("The torque is 370 Nm.", sources))):
+    with patch("app.api.v1.chat.run_crag", new=AsyncMock(return_value=("The torque is 370 Nm.", sources, None))):
         app.dependency_overrides[get_tenant] = _mock_tenant(tenant)
         app.dependency_overrides[get_provider] = _mock_provider(provider)
         try:

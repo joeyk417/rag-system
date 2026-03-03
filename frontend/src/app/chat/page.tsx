@@ -11,13 +11,13 @@ const PRESET_QUERIES = [
   { id: "3",  label: "#3", text: "What are the slope angles on the HF-2160?" },
   { id: "4",  label: "#4", text: "What motor bolt size for the HF-2472?" },
   { id: "5",  label: "#5", text: "Shore A hardness for PU-500 panels?" },
-  { id: "6",  label: "#6", text: "Max feed size for PU-600 series?" },
-  { id: "7",  label: "#7", text: "What is NR-35-SA compound used for?" },
-  { id: "8",  label: "#8", text: "Cure temperature for NR-55-HA?" },
-  { id: "9",  label: "#9", text: "How many field technicians does EA employ?" },
-  { id: "10", label: "#10", text: "What is the new hire competency timeline?" },
-  { id: "B1", label: "Bonus #1", text: "What panel spec applies to the HF-2472?" },
-  { id: "B2", label: "Bonus #2", text: "What are the training requirements before installation?" },
+  // { id: "6",  label: "#6", text: "Max feed size for PU-600 series?" },
+  // { id: "7",  label: "#7", text: "What is NR-35-SA compound used for?" },
+  // { id: "8",  label: "#8", text: "Cure temperature for NR-55-HA?" },
+  // { id: "9",  label: "#9", text: "How many field technicians does EA employ?" },
+  // { id: "10", label: "#10", text: "What is the new hire competency timeline?" },
+  // { id: "B1", label: "Bonus #1", text: "What panel spec applies to the HF-2472?" },
+  // { id: "B2", label: "Bonus #2", text: "What are the training requirements before installation?" },
 ];
 
 export default function ChatPage() {

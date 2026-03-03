@@ -23,8 +23,8 @@ export default function Nav() {
   return (
     <nav className="flex h-screen w-52 flex-shrink-0 flex-col border-r border-slate-200 bg-slate-50 px-4 py-6">
       <div className="mb-8">
-        <span className="text-lg font-semibold text-slate-800">RAG QA</span>
-        <p className="mt-0.5 text-xs text-slate-400">Phase 1 Sign-off</p>
+        <span className="text-lg font-semibold text-slate-800">RAG</span>
+        <p className="mt-0.5 text-xs text-slate-400">Test</p>
       </div>
 
       <ul className="flex flex-col gap-1">

@@ -37,7 +37,7 @@ def _make_tenant(config: dict | None = None) -> MagicMock:
 def _make_provider() -> AsyncMock:
     provider = AsyncMock()
     provider.embed = AsyncMock(return_value=[0.1] * 1536)
-    provider.generate = AsyncMock(return_value="mocked response")
+    provider.generate = AsyncMock(return_value=("mocked response", None))
     return provider
 
 
@@ -100,7 +100,7 @@ def test_should_rewrite_irrelevant() -> None:
 async def test_grade_node_relevant() -> None:
     provider = _make_provider()
     provider.generate = AsyncMock(
-        return_value=json.dumps({"is_relevant": True, "reasoning": "Documents answer the question."})
+        return_value=(json.dumps({"is_relevant": True, "reasoning": "Documents answer the question."}), None)
     )
     grade_node = make_grade_node(provider)
     state: AgentState = {
@@ -119,7 +119,7 @@ async def test_grade_node_relevant() -> None:
 async def test_grade_node_irrelevant() -> None:
     provider = _make_provider()
     provider.generate = AsyncMock(
-        return_value=json.dumps({"is_relevant": False, "reasoning": "Documents are unrelated."})
+        return_value=(json.dumps({"is_relevant": False, "reasoning": "Documents are unrelated."}), None)
     )
     grade_node = make_grade_node(provider)
     state: AgentState = {
@@ -155,7 +155,7 @@ async def test_grade_node_no_docs_returns_irrelevant() -> None:
 async def test_grade_node_parse_error_fails_open() -> None:
     """On invalid JSON / parse error, grade should fail-open (is_relevant=True)."""
     provider = _make_provider()
-    provider.generate = AsyncMock(return_value="this is not json")
+    provider.generate = AsyncMock(return_value=("this is not json", None))
     grade_node = make_grade_node(provider)
     state: AgentState = {
         "query": "any query",
@@ -177,7 +177,7 @@ async def test_grade_node_parse_error_fails_open() -> None:
 
 async def test_rewrite_node_updates_rewritten_query() -> None:
     provider = _make_provider()
-    provider.generate = AsyncMock(return_value="rubber compound formulation EA screen panels")
+    provider.generate = AsyncMock(return_value=("rubber compound formulation EA screen panels", None))
     rewrite_node = make_rewrite_node(provider)
     state: AgentState = {
         "query": "What rubber is used?",
@@ -194,7 +194,7 @@ async def test_rewrite_node_updates_rewritten_query() -> None:
 
 async def test_rewrite_node_strips_quotes() -> None:
     provider = _make_provider()
-    provider.generate = AsyncMock(return_value='"quoted rewritten query"')
+    provider.generate = AsyncMock(return_value=('"quoted rewritten query"', None))
     rewrite_node = make_rewrite_node(provider)
     state: AgentState = {
         "query": "original",
@@ -216,7 +216,7 @@ async def test_rewrite_node_strips_quotes() -> None:
 
 async def test_generate_node_vector_path_populates_sources() -> None:
     provider = _make_provider()
-    provider.generate = AsyncMock(return_value="The installation requires 45 Nm torque. [1]")
+    provider.generate = AsyncMock(return_value=("The installation requires 45 Nm torque. [1]", None))
     tenant = _make_tenant()
     generate_node = make_generate_node(tenant, provider)
     chunk = _make_chunk(doc_number="EA-SOP-001", page=3)
@@ -240,7 +240,7 @@ async def test_generate_node_vector_path_populates_sources() -> None:
 
 async def test_generate_node_web_path_returns_empty_sources() -> None:
     provider = _make_provider()
-    provider.generate = AsyncMock(return_value="Web-sourced answer about torque.")
+    provider.generate = AsyncMock(return_value=("Web-sourced answer about torque.", None))
     tenant = _make_tenant()
     generate_node = make_generate_node(tenant, provider)
     state: AgentState = {
@@ -260,7 +260,7 @@ async def test_generate_node_web_path_returns_empty_sources() -> None:
 async def test_generate_node_no_context() -> None:
     """When neither docs nor web_results exist, generate still returns an answer."""
     provider = _make_provider()
-    provider.generate = AsyncMock(return_value="I don't have enough information.")
+    provider.generate = AsyncMock(return_value=("I don't have enough information.", None))
     tenant = _make_tenant()
     generate_node = make_generate_node(tenant, provider)
     state: AgentState = {
@@ -419,7 +419,7 @@ async def test_run_crag_returns_answer_and_sources() -> None:
         patch("app.agent.crag_agent.make_web_search_node", return_value=mock_web_search),
         patch("app.agent.crag_agent.make_generate_node", return_value=mock_generate),
     ):
-        answer, sources = await run_crag("What torque?", tenant, provider)
+        answer, sources, usage = await run_crag("What torque?", tenant, provider)
 
     assert answer == "Torque is 45 Nm."
     assert len(sources) == 1

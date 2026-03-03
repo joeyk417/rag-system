@@ -60,3 +60,13 @@ BM25Plus re-ranking on heading+content chunks combines:
 - BM25: exact term matching ("NR-35-SA", "M20 Grade 10.9", "HF-2472")
 
 This pattern is directly derived from the reference notebooks (Notebook 02).
+
+## Why Standard Cosine Similarity, not MMR
+
+Notebook 02 uses MMR (Maximum Marginal Relevance) via ChromaDB to promote diversity in retrieved results. The production implementation uses standard cosine similarity (`<=>` in pgvector) for two reasons:
+
+1. **Page-wise chunking eliminates the main duplicate risk.** Each page is a single chunk, so multiple chunks from the same page are structurally impossible. The scenario MMR guards against (5 near-identical chunks from the same section) cannot occur here.
+
+2. **pgvector has no native MMR support.** A Python-level MMR implementation would require fetching a large candidate set and iteratively removing similar vectors — adding latency and complexity for minimal gain at our chunk granularity.
+
+BM25 re-ranking already provides the diversity benefit MMR offers: highly similar vector neighbours that contain different terminology will be separated in the final ranking by BM25 scores.

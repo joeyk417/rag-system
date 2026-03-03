@@ -54,7 +54,7 @@ async def extract(
     )
 
     try:
-        raw = await provider.generate(
+        raw, _ = await provider.generate(
             system_prompt,
             query,
             response_format={"type": "json_object"},

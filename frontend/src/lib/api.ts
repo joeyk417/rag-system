@@ -142,12 +142,13 @@ export async function getJobStatus(
 
 export async function postChat(
   tenantKey: string,
-  query: string
+  query: string,
+  agentType: "crag" | "reflexion" = "crag"
 ): Promise<ChatResponse> {
   const res = await fetch(`${apiBase()}/api/v1/chat`, {
     method: "POST",
     headers: tenantHeaders(tenantKey),
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, agent_type: agentType }),
   });
   return handleResponse<ChatResponse>(res);
 }

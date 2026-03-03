@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -19,6 +21,7 @@ class TokenUsage(BaseModel):
 
 class ChatRequest(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
+    agent_type: Literal["crag", "reflexion"] = "crag"
 
 
 class ChatResponse(BaseModel):

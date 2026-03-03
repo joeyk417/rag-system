@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [result, setResult] = useState<ChatResponse | null>(null);
   const [error, setError] = useState("");
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [agentType, setAgentType] = useState<"crag" | "reflexion">("crag");
 
   async function submit(q: string, presetId?: string) {
     if (!q.trim() || loading) return;
@@ -35,7 +36,7 @@ export default function ChatPage() {
     setActivePreset(presetId ?? null);
     try {
       const { tenantKey } = getKeys();
-      const data = await postChat(tenantKey, q.trim());
+      const data = await postChat(tenantKey, q.trim(), agentType);
       setResult(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Request failed");
@@ -85,6 +86,30 @@ export default function ChatPage() {
         )}
       </section>
 
+      {/* Agent type toggle */}
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-xs font-medium text-slate-500">Agent:</span>
+        {(["crag", "reflexion"] as const).map((type) => (
+          <button
+            key={type}
+            onClick={() => setAgentType(type)}
+            disabled={loading}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-40
+              ${agentType === type
+                ? "border-brand-500 bg-brand-600 text-white"
+                : "border-slate-300 text-slate-600 hover:border-brand-400 hover:text-brand-600"
+              }`}
+          >
+            {type === "crag" ? "CRAG" : "Reflexion"}
+          </button>
+        ))}
+        {agentType === "reflexion" && (
+          <span className="text-xs text-slate-400 italic">
+            multi-hop · up to 3 retrieve-revise cycles
+          </span>
+        )}
+      </div>
+
       {/* Free-form input */}
       <div className="flex gap-2">
         <textarea
@@ -125,7 +150,7 @@ export default function ChatPage() {
             className="inline-block h-4 w-4 animate-spin rounded-full border-2
                        border-slate-200 border-t-brand-500"
           />
-          Running CRAG agent…
+          Running {agentType === "reflexion" ? "Reflexion" : "CRAG"} agent…
         </div>
       )}
 

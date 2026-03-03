@@ -21,7 +21,7 @@ async def chat(
     """Query the knowledge base using the selected agent.
 
     agent_type="crag" (default): single retrieve-grade-generate cycle with web fallback.
-    agent_type="reflexion": multi-hop iterative draft→retrieve→revise loop.
+    agent_type="reflexion": multi-hop iterative draft→retrieve→revise loop. With reflexion, usage.total_tokens will be higher (draft + revise calls) and the answer tends to be more comprehensive on cross-document queries
     """
     if body.agent_type == "reflexion":
         answer, sources, usage = await run_reflexion(body.query, tenant, provider)

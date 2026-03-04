@@ -11,13 +11,13 @@ const PRESET_QUERIES = [
   { id: "3",  label: "#3", text: "What are the slope angles on the HF-2160?" },
   { id: "4",  label: "#4", text: "What motor bolt size for the HF-2472?" },
   { id: "5",  label: "#5", text: "Shore A hardness for PU-500 panels?" },
-  // { id: "6",  label: "#6", text: "Max feed size for PU-600 series?" },
-  // { id: "7",  label: "#7", text: "What is NR-35-SA compound used for?" },
-  // { id: "8",  label: "#8", text: "Cure temperature for NR-55-HA?" },
-  // { id: "9",  label: "#9", text: "How many field technicians does EA employ?" },
-  // { id: "10", label: "#10", text: "What is the new hire competency timeline?" },
-  // { id: "B1", label: "Bonus #1", text: "What panel spec applies to the HF-2472?" },
-  // { id: "B2", label: "Bonus #2", text: "What are the training requirements before installation?" },
+  { id: "6",  label: "#6", text: "Max feed size for PU-600 series?" },
+  { id: "7",  label: "#7", text: "What is NR-35-SA compound used for?" },
+  { id: "8",  label: "#8", text: "Cure temperature for NR-55-HA?" },
+  { id: "9",  label: "#9", text: "How many field technicians does EA employ?" },
+  { id: "10", label: "#10", text: "What is the new hire competency timeline?" },
+  { id: "B1", label: "Bonus #1", text: "What panel spec applies to the HF-2472?" },
+  { id: "B2", label: "Bonus #2", text: "What are the training requirements before installation?" },
 ];
 
 export default function ChatPage() {
@@ -26,7 +26,7 @@ export default function ChatPage() {
   const [result, setResult] = useState<ChatResponse | null>(null);
   const [error, setError] = useState("");
   const [activePreset, setActivePreset] = useState<string | null>(null);
-  const [agentType, setAgentType] = useState<"crag" | "reflexion">("crag");
+  const [agentType, setAgentType] = useState<"crag" | "reflexion" | "self_rag">("crag");
 
   async function submit(q: string, presetId?: string) {
     if (!q.trim() || loading) return;
@@ -89,7 +89,7 @@ export default function ChatPage() {
       {/* Agent type toggle */}
       <div className="mb-4 flex items-center gap-2">
         <span className="text-xs font-medium text-slate-500">Agent:</span>
-        {(["crag", "reflexion"] as const).map((type) => (
+        {(["crag", "reflexion", "self_rag"] as const).map((type) => (
           <button
             key={type}
             onClick={() => setAgentType(type)}
@@ -100,12 +100,17 @@ export default function ChatPage() {
                 : "border-slate-300 text-slate-600 hover:border-brand-400 hover:text-brand-600"
               }`}
           >
-            {type === "crag" ? "CRAG" : "Reflexion"}
+            {type === "crag" ? "CRAG" : type === "reflexion" ? "Reflexion" : "Self-RAG"}
           </button>
         ))}
         {agentType === "reflexion" && (
           <span className="text-xs text-slate-400 italic">
             multi-hop · up to 3 retrieve-revise cycles
+          </span>
+        )}
+        {agentType === "self_rag" && (
+          <span className="text-xs text-slate-400 italic">
+            per-doc grading · hallucination check · completeness check
           </span>
         )}
       </div>
@@ -150,7 +155,7 @@ export default function ChatPage() {
             className="inline-block h-4 w-4 animate-spin rounded-full border-2
                        border-slate-200 border-t-brand-500"
           />
-          Running {agentType === "reflexion" ? "Reflexion" : "CRAG"} agent…
+          Running {agentType === "reflexion" ? "Reflexion" : agentType === "self_rag" ? "Self-RAG" : "CRAG"} agent…
         </div>
       )}
 

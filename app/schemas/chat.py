@@ -21,7 +21,7 @@ class TokenUsage(BaseModel):
 
 class ChatRequest(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
-    agent_type: Literal["crag", "reflexion"] = "crag"
+    agent_type: Literal["crag", "reflexion", "self_rag"] = "crag"
 
 
 class ChatResponse(BaseModel):

@@ -2,6 +2,17 @@
 
 Multi-tenant document intelligence system. Companies upload PDFs; users query them in natural language. Each tenant gets an isolated knowledge base.
 
+## Key Differences from Existing Agents
+
+| Concern                | CRAG                  | Reflexion                | Self-RAG                                        |
+| ---------------------- | --------------------- | ------------------------ | ----------------------------------------------- |
+| Document grading       | Batch all-or-nothing  | None                     | Per-document (N LLM calls, filter individually) |
+| Query rewriting        | Single rewrite string | search_queries replaces  | rewritten_queries accumulates                   |
+| Hallucination check    | None                  | None                     | Post-generate LLM grade                         |
+| Answer completeness    | None S                | elf-reported is_complete | Separate LLM grade                              |
+| Iteration guard        | None                  | iteration_count in state | iteration_count in state                        |
+| Async conditional edge | No                    | No                       | Yes — check_answer_quality is async             |
+
 ## Running Locally
 
 ### Prerequisites
@@ -41,10 +52,10 @@ cd frontend && npm run dev
 
 ### Keys
 
-| Key | Value |
-|-----|-------|
-| Tenant (EA) | `ea-dev-key-local-testing-only` |
-| Admin | value of `ADMIN_API_KEY` from `.env` |
+| Key         | Value                                |
+| ----------- | ------------------------------------ |
+| Tenant (EA) | `ea-dev-key-local-testing-only`      |
+| Admin       | value of `ADMIN_API_KEY` from `.env` |
 
 ### Ingest sample documents
 

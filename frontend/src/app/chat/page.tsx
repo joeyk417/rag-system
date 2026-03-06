@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getKeys } from "@/lib/auth";
 import { postChat, type ChatResponse } from "@/lib/api";
 import SourceCard from "@/components/SourceCard";
@@ -26,7 +26,8 @@ export default function ChatPage() {
   const [result, setResult] = useState<ChatResponse | null>(null);
   const [error, setError] = useState("");
   const [activePreset, setActivePreset] = useState<string | null>(null);
-  const [agentType, setAgentType] = useState<"crag" | "reflexion" | "self_rag">("crag");
+  const [agentType, setAgentType] = useState<"crag" | "reflexion" | "self_rag" | "adaptive_rag">("crag");
+  const sessionId = useRef<string>(crypto.randomUUID());
 
   async function submit(q: string, presetId?: string) {
     if (!q.trim() || loading) return;
@@ -36,7 +37,12 @@ export default function ChatPage() {
     setActivePreset(presetId ?? null);
     try {
       const { tenantKey } = getKeys();
-      const data = await postChat(tenantKey, q.trim(), agentType);
+      const data = await postChat(
+        tenantKey,
+        q.trim(),
+        agentType,
+        agentType === "adaptive_rag" ? sessionId.current : undefined,
+      );
       setResult(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Request failed");
@@ -89,7 +95,7 @@ export default function ChatPage() {
       {/* Agent type toggle */}
       <div className="mb-4 flex items-center gap-2">
         <span className="text-xs font-medium text-slate-500">Agent:</span>
-        {(["crag", "reflexion", "self_rag"] as const).map((type) => (
+        {(["crag", "reflexion", "self_rag", "adaptive_rag"] as const).map((type) => (
           <button
             key={type}
             onClick={() => setAgentType(type)}
@@ -100,7 +106,7 @@ export default function ChatPage() {
                 : "border-slate-300 text-slate-600 hover:border-brand-400 hover:text-brand-600"
               }`}
           >
-            {type === "crag" ? "CRAG" : type === "reflexion" ? "Reflexion" : "Self-RAG"}
+            {type === "crag" ? "CRAG" : type === "reflexion" ? "Reflexion" : type === "self_rag" ? "Self-RAG" : "Adaptive RAG"}
           </button>
         ))}
         {agentType === "reflexion" && (
@@ -111,6 +117,16 @@ export default function ChatPage() {
         {agentType === "self_rag" && (
           <span className="text-xs text-slate-400 italic">
             per-doc grading · hallucination check · completeness check
+          </span>
+        )}
+        {agentType === "adaptive_rag" && (
+          <span className="text-xs text-slate-400 italic">
+            route → vector / web / sql · multi-turn memory via thread_id
+          </span>
+        )}
+        {agentType === "adaptive_rag" && (
+          <span className="text-xs text-slate-400 font-mono">
+            session: {sessionId.current.slice(0, 8)}…
           </span>
         )}
       </div>
@@ -155,7 +171,7 @@ export default function ChatPage() {
             className="inline-block h-4 w-4 animate-spin rounded-full border-2
                        border-slate-200 border-t-brand-500"
           />
-          Running {agentType === "reflexion" ? "Reflexion" : agentType === "self_rag" ? "Self-RAG" : "CRAG"} agent…
+          Running {agentType === "reflexion" ? "Reflexion" : agentType === "self_rag" ? "Self-RAG" : agentType === "adaptive_rag" ? "Adaptive RAG" : "CRAG"} agent…
         </div>
       )}
 

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+import logging
 
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.agent.adaptive_rag_agent import run_adaptive_rag
 from app.agent.crag_agent import run_crag
 from app.agent.reflexion_agent import run_reflexion
 from app.agent.self_rag_agent import run_self_rag
@@ -11,6 +14,7 @@ from app.dependencies import get_provider, get_tenant
 from app.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("", response_model=ChatResponse)
@@ -24,11 +28,22 @@ async def chat(
     agent_type="crag" (default): single retrieve-grade-generate cycle with web fallback.
     agent_type="reflexion": multi-hop iterative draft→retrieve→revise loop.
     agent_type="self_rag": per-doc relevance grading + hallucination detection + answer quality check.
+    agent_type="adaptive_rag": intelligent router → Self-RAG / web search / SQL (stub) based on query intent.
     """
-    if body.agent_type == "reflexion":
-        answer, sources, usage = await run_reflexion(body.query, tenant, provider)
-    elif body.agent_type == "self_rag":
-        answer, sources, usage = await run_self_rag(body.query, tenant, provider)
-    else:
-        answer, sources, usage = await run_crag(body.query, tenant, provider)
+    try:
+        if body.agent_type == "reflexion":
+            answer, sources, usage = await run_reflexion(body.query, tenant, provider)
+        elif body.agent_type == "self_rag":
+            answer, sources, usage = await run_self_rag(body.query, tenant, provider)
+        elif body.agent_type == "adaptive_rag":
+            answer, sources, usage = await run_adaptive_rag(
+                body.query, tenant, provider, thread_id=body.thread_id
+            )
+        else:
+            answer, sources, usage = await run_crag(body.query, tenant, provider)
+    except Exception:
+        logger.exception(
+            "chat.error agent_type=%s tenant=%s", body.agent_type, tenant.tenant_id
+        )
+        raise HTTPException(status_code=500, detail="Agent failed. Check server logs.")
     return ChatResponse(answer=answer, sources=sources, query=body.query, usage=usage)

@@ -143,12 +143,17 @@ export async function getJobStatus(
 export async function postChat(
   tenantKey: string,
   query: string,
-  agentType: "crag" | "reflexion" | "self_rag" = "crag"
+  agentType: "crag" | "reflexion" | "self_rag" | "adaptive_rag" = "crag",
+  threadId?: string
 ): Promise<ChatResponse> {
   const res = await fetch(`${apiBase()}/api/v1/chat`, {
     method: "POST",
     headers: tenantHeaders(tenantKey),
-    body: JSON.stringify({ query, agent_type: agentType }),
+    body: JSON.stringify({
+      query,
+      agent_type: agentType,
+      ...(threadId ? { thread_id: threadId } : {}),
+    }),
   });
   return handleResponse<ChatResponse>(res);
 }

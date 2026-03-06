@@ -4,15 +4,31 @@ import { useEffect, useState } from "react";
 import { getKeys } from "@/lib/auth";
 import {
   createTenant,
+  getTenantsUsage,
   listTenants,
   patchTenant,
-  type TenantResponse,
   type TenantCreateResponse,
+  type TenantResponse,
+  type TenantUsageResponse,
 } from "@/lib/api";
+
+function tierBadgeClass(tier: string): string {
+  if (tier === "Enterprise") return "bg-purple-100 text-purple-700";
+  if (tier === "Professional") return "bg-blue-100 text-blue-700";
+  return "bg-slate-100 text-slate-600";
+}
+
+function usageBarClass(pct: number): string {
+  if (pct >= 90) return "bg-red-500";
+  if (pct >= 70) return "bg-yellow-400";
+  return "bg-green-500";
+}
 
 export default function AdminPage() {
   const [tenants, setTenants] = useState<TenantResponse[]>([]);
   const [loadError, setLoadError] = useState("");
+  const [usage, setUsage] = useState<TenantUsageResponse[]>([]);
+  const [usageError, setUsageError] = useState("");
 
   // Create form
   const [newTenantId, setNewTenantId] = useState("");
@@ -44,8 +60,19 @@ export default function AdminPage() {
     }
   }
 
+  async function loadUsage() {
+    if (!adminKey) return;
+    try {
+      const data = await getTenantsUsage(adminKey);
+      setUsage(data);
+      setUsageError("");
+    } catch (e: unknown) {
+      setUsageError(e instanceof Error ? e.message : "Failed to load usage");
+    }
+  }
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadTenants(); }, []);
+  useEffect(() => { loadTenants(); loadUsage(); }, []);
 
   async function handleCreate() {
     setCreating(true);
@@ -63,6 +90,7 @@ export default function AdminPage() {
       setNewName("");
       setNewConfig("{}");
       loadTenants();
+      loadUsage();
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : "Create failed");
     } finally {
@@ -247,6 +275,84 @@ export default function AdminPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Token Usage Dashboard */}
+      {adminKey && (
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-base font-semibold text-slate-700">Token Usage — Current Month</h2>
+            <button onClick={loadUsage} className="text-xs text-brand-600 hover:underline">
+              Refresh
+            </button>
+          </div>
+
+          {usageError && (
+            <p className="mb-3 rounded-md bg-red-50 px-4 py-2 text-sm text-red-600">{usageError}</p>
+          )}
+
+          <div className="overflow-hidden rounded-lg border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-400">
+                <tr>
+                  <th className="px-4 py-3 text-left">Tenant</th>
+                  <th className="px-4 py-3 text-left">Period</th>
+                  <th className="px-4 py-3 text-right">Tokens Used</th>
+                  <th className="px-4 py-3 text-right">Quota</th>
+                  <th className="px-4 py-3 text-left w-40">% Used</th>
+                  <th className="px-4 py-3 text-right">Est. Cost</th>
+                  <th className="px-4 py-3 text-left">Tier</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usage.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">
+                      No usage data for the current month.
+                    </td>
+                  </tr>
+                ) : (
+                  usage.map((u) => (
+                    <tr key={u.tenant_id} className="border-t border-slate-100 hover:bg-slate-50">
+                      <td className="px-4 py-3 font-mono text-xs font-medium">{u.tenant_id}</td>
+                      <td className="px-4 py-3 text-xs text-slate-400">{u.period_month}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {u.tokens_used.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-400">
+                        {u.token_quota.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-28 overflow-hidden rounded-full bg-slate-100">
+                            <div
+                              className={`h-full rounded-full ${usageBarClass(u.percent_used)}`}
+                              style={{ width: `${Math.min(u.percent_used, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs tabular-nums text-slate-500">
+                            {u.percent_used.toFixed(1)}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-xs">
+                        ${u.estimated_cost_usd.toFixed(4)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium
+                                      ${tierBadgeClass(u.tier)}`}
+                        >
+                          {u.tier}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Patch config modal */}
       {patchTarget && (

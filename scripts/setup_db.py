@@ -8,6 +8,7 @@ Run once before seed_tenant.py:
 Creates:
   - pgvector extension
   - public.tenants table
+  - public.tenant_usage table (token quota tracking)
 
 Per-tenant schemas/tables are created by seed_tenant.py (or POST /admin/tenants in Task 6).
 """
@@ -40,6 +41,16 @@ CREATE TABLE IF NOT EXISTS public.tenants (
 );
 """
 
+_CREATE_TENANT_USAGE_TABLE = """
+CREATE TABLE IF NOT EXISTS public.tenant_usage (
+    tenant_id    TEXT   NOT NULL REFERENCES public.tenants(tenant_id),
+    period_month DATE   NOT NULL,  -- first day of the month e.g. 2026-03-01
+    tokens_used  BIGINT NOT NULL DEFAULT 0,
+    token_quota  BIGINT NOT NULL,  -- set per subscription tier on onboarding
+    PRIMARY KEY (tenant_id, period_month)
+);
+"""
+
 
 async def main() -> None:
     print(f"Connecting to {_DB_URL!r} …")
@@ -50,6 +61,9 @@ async def main() -> None:
 
         print("Creating public.tenants table …")
         await conn.execute(_CREATE_TENANTS_TABLE)
+
+        print("Creating public.tenant_usage table …")
+        await conn.execute(_CREATE_TENANT_USAGE_TABLE)
 
         print("✓ Database setup complete.")
     finally:

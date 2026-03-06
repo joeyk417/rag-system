@@ -77,6 +77,16 @@ export interface TenantCreateResponse extends TenantResponse {
   api_key: string; // shown once only
 }
 
+export interface TenantUsageResponse {
+  tenant_id: string;
+  period_month: string; // e.g. "2026-03-01"
+  tokens_used: number;
+  token_quota: number;
+  percent_used: number;
+  estimated_cost_usd: number;
+  tier: string;
+}
+
 // ---- Helpers ---------------------------------------------------------------
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -202,7 +212,7 @@ export async function listTenants(adminKey: string): Promise<TenantResponse[]> {
 export async function patchTenant(
   adminKey: string,
   tenantUuid: string,
-  payload: { config?: Record<string, unknown>; is_active?: boolean }
+  payload: { config?: Record<string, unknown>; is_active?: boolean; token_quota?: number }
 ): Promise<TenantResponse> {
   const res = await fetch(`${apiBase()}/api/v1/admin/tenants/${tenantUuid}`, {
     method: "PATCH",
@@ -210,4 +220,13 @@ export async function patchTenant(
     body: JSON.stringify(payload),
   });
   return handleResponse<TenantResponse>(res);
+}
+
+export async function getTenantsUsage(
+  adminKey: string
+): Promise<TenantUsageResponse[]> {
+  const res = await fetch(`${apiBase()}/api/v1/admin/usage`, {
+    headers: adminHeaders(adminKey),
+  });
+  return handleResponse<TenantUsageResponse[]>(res);
 }

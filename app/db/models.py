@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, ForeignKey, Integer, Text, func
+from sqlalchemy import BigInteger, Boolean, Date, ForeignKey, Integer, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -17,6 +17,22 @@ class Base(DeclarativeBase):
 # ---------------------------------------------------------------------------
 # Public schema — shared across all tenants
 # ---------------------------------------------------------------------------
+
+
+class TenantUsage(Base):
+    """Monthly token consumption per tenant (public schema)."""
+
+    __tablename__ = "tenant_usage"
+    __table_args__ = {"schema": "public"}
+
+    tenant_id: Mapped[str] = mapped_column(
+        Text, primary_key=True, nullable=False
+    )
+    period_month: Mapped[date] = mapped_column(
+        Date, primary_key=True, nullable=False
+    )
+    tokens_used: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    token_quota: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
 
 class Tenant(Base):

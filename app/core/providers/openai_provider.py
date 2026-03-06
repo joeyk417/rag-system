@@ -21,6 +21,7 @@ class OpenAIProvider(BaseLLMProvider):
         self, system_prompt: str, user_message: str, **kwargs: object
     ) -> tuple[str, LLMUsage | None]:
         start = time.monotonic()
+        kwargs.setdefault("max_tokens", settings.openai_max_tokens_per_request)
         response = await self._client.chat.completions.create(
             model=settings.openai_llm_model,
             messages=[

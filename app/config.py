@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     openai_llm_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
     openai_embedding_dimensions: int = 1536
+    openai_max_tokens_per_request: int = 2000  # per-request cap (prevents runaway agent loops)
+
+    # Token quota tiers (tokens/month — overridable via env vars)
+    token_quota_starter: int = 500_000
+    token_quota_professional: int = 2_000_000
+    token_quota_enterprise: int = 10_000_000
 
     # Database
     database_url: str = Field(default="postgresql+asyncpg://raguser:ragpass@localhost:5432/ragdb")

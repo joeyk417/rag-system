@@ -6,14 +6,21 @@ import secrets
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.token_budget import get_all_usage
 from app.db.models import Tenant
 from app.db.schema_utils import create_tenant_schema
 from app.db.session import AsyncSessionLocal
 from app.dependencies import get_admin, get_db
-from app.schemas.tenant import TenantCreate, TenantCreateResponse, TenantPatch, TenantResponse
+from app.schemas.tenant import (
+    TenantCreate,
+    TenantCreateResponse,
+    TenantPatch,
+    TenantResponse,
+    TenantUsageResponse,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -67,6 +74,17 @@ async def create_tenant(
     # Provision the per-tenant PostgreSQL schema + tables
     await create_tenant_schema(schema_name)
 
+    # Seed current-month token quota row for the new tenant
+    await session.execute(
+        text(
+            "INSERT INTO public.tenant_usage (tenant_id, period_month, tokens_used, token_quota) "
+            "VALUES (:tid, date_trunc('month', now())::date, 0, :quota) "
+            "ON CONFLICT (tenant_id, period_month) DO NOTHING"
+        ),
+        {"tid": body.tenant_id, "quota": body.token_quota},
+    )
+    await session.commit()
+
     logger.info(
         "admin.create_tenant",
         extra={"tenant_id": body.tenant_id, "schema": schema_name},
@@ -117,6 +135,18 @@ async def patch_tenant(
     if body.is_active is not None:
         tenant.is_active = body.is_active
 
+    if body.token_quota is not None:
+        # Update the current-month quota (or create row if missing)
+        await session.execute(
+            text(
+                "INSERT INTO public.tenant_usage (tenant_id, period_month, tokens_used, token_quota) "
+                "VALUES (:tid, date_trunc('month', now())::date, 0, :quota) "
+                "ON CONFLICT (tenant_id, period_month) DO UPDATE "
+                "SET token_quota = :quota"
+            ),
+            {"tid": tenant.tenant_id, "quota": body.token_quota},
+        )
+
     await session.commit()
     await session.refresh(tenant)
 
@@ -125,3 +155,13 @@ async def patch_tenant(
         extra={"tenant_id": str(tenant_id)},
     )
     return _tenant_to_response(tenant)
+
+
+@router.get("/usage", response_model=list[TenantUsageResponse])
+async def get_usage(
+    _: None = Depends(get_admin),
+    session: AsyncSession = Depends(get_db),
+) -> list[TenantUsageResponse]:
+    """Return current-month token usage for all tenants."""
+    rows = await get_all_usage(session)
+    return [TenantUsageResponse(**row) for row in rows]

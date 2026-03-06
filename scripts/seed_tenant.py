@@ -138,6 +138,18 @@ async def main() -> None:
 
         await create_tenant_schema(conn, _SCHEMA_NAME)
 
+        # Seed Enterprise-tier token quota for EA
+        await conn.execute(
+            """
+            INSERT INTO public.tenant_usage (tenant_id, period_month, tokens_used, token_quota)
+            VALUES ($1, date_trunc('month', now())::date, 0, $2)
+            ON CONFLICT (tenant_id, period_month) DO NOTHING
+            """,
+            _TENANT_ID,
+            settings.token_quota_enterprise,
+        )
+        print(f"✓ EA token quota seeded (Enterprise tier: {settings.token_quota_enterprise:,} tokens/month).")
+
         if not existing:
             print()
             print("=" * 60)

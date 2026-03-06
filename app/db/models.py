@@ -32,6 +32,8 @@ class TenantUsage(Base):
         Date, primary_key=True, nullable=False
     )
     tokens_used: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    input_tokens: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    output_tokens: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     token_quota: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
 

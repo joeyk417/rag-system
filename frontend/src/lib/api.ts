@@ -81,6 +81,8 @@ export interface TenantUsageResponse {
   tenant_id: string;
   period_month: string; // e.g. "2026-03-01"
   tokens_used: number;
+  input_tokens: number;
+  output_tokens: number;
   token_quota: number;
   percent_used: number;
   estimated_cost_usd: number;

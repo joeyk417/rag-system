@@ -108,16 +108,18 @@ async def test_check_budget_exactly_at_quota_raises_402():
 @pytest.mark.asyncio
 async def test_record_token_usage_executes_upsert():
     session = _make_session()
-    await record_token_usage(session, "test_tenant", actual_tokens=1234)
+    await record_token_usage(session, "test_tenant", input_tokens=800, output_tokens=434)
     session.execute.assert_called_once()
     session.commit.assert_called_once()
-    # Verify the SQL contains the upsert keyword and tenant param
+    # Verify the SQL contains the upsert keyword and correct params
     call_args = session.execute.call_args
     sql_str = str(call_args[0][0])
     assert "ON CONFLICT" in sql_str
     params = call_args[0][1]
     assert params["tid"] == "test_tenant"
-    assert params["tokens"] == 1234
+    assert params["input"] == 800
+    assert params["output"] == 434
+    assert params["total"] == 1234
 
 
 # ---------------------------------------------------------------------------
@@ -133,6 +135,8 @@ async def test_get_all_usage_returns_formatted_rows():
     row.tenant_id = "elastomers_au"
     row.period_month = date(2026, 3, 1)
     row.tokens_used = 42_300
+    row.input_tokens = 30_000
+    row.output_tokens = 12_300
     row.token_quota = 10_000_000
 
     session = _make_session(fetchall_result=[row])
@@ -143,10 +147,19 @@ async def test_get_all_usage_returns_formatted_rows():
     assert r["tenant_id"] == "elastomers_au"
     assert r["period_month"] == "2026-03-01"
     assert r["tokens_used"] == 42_300
+    assert r["input_tokens"] == 30_000
+    assert r["output_tokens"] == 12_300
     assert r["token_quota"] == 10_000_000
     assert r["percent_used"] == round(42_300 / 10_000_000 * 100, 2)
     assert r["tier"] == "Enterprise"
-    assert r["estimated_cost_usd"] == round(42_300 / 1000 * 0.00015, 4)
+    # Cost = input * rate_in + output * rate_out (rates from settings defaults)
+    from app.config import settings as s
+    expected_cost = round(
+        30_000 / 1000 * s.token_cost_input_per_1k
+        + 12_300 / 1000 * s.token_cost_output_per_1k,
+        4,
+    )
+    assert r["estimated_cost_usd"] == expected_cost
 
 
 @pytest.mark.asyncio

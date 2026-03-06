@@ -55,6 +55,11 @@ async def chat(
         raise HTTPException(status_code=500, detail="Agent failed. Check server logs.")
 
     if usage and usage.total_tokens:
-        await record_token_usage(session, tenant.tenant_id, usage.total_tokens)
+        await record_token_usage(
+            session,
+            tenant.tenant_id,
+            input_tokens=usage.input_tokens,
+            output_tokens=usage.output_tokens,
+        )
 
     return ChatResponse(answer=answer, sources=sources, query=body.query, usage=usage)

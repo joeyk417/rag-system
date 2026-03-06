@@ -43,12 +43,21 @@ CREATE TABLE IF NOT EXISTS public.tenants (
 
 _CREATE_TENANT_USAGE_TABLE = """
 CREATE TABLE IF NOT EXISTS public.tenant_usage (
-    tenant_id    TEXT   NOT NULL REFERENCES public.tenants(tenant_id),
-    period_month DATE   NOT NULL,  -- first day of the month e.g. 2026-03-01
-    tokens_used  BIGINT NOT NULL DEFAULT 0,
-    token_quota  BIGINT NOT NULL,  -- set per subscription tier on onboarding
+    tenant_id     TEXT   NOT NULL REFERENCES public.tenants(tenant_id),
+    period_month  DATE   NOT NULL,  -- first day of the month e.g. 2026-03-01
+    tokens_used   BIGINT NOT NULL DEFAULT 0,
+    input_tokens  BIGINT NOT NULL DEFAULT 0,
+    output_tokens BIGINT NOT NULL DEFAULT 0,
+    token_quota   BIGINT NOT NULL,  -- set per subscription tier on onboarding
     PRIMARY KEY (tenant_id, period_month)
 );
+"""
+
+# Idempotent column additions for existing deployments that pre-date these columns.
+_MIGRATE_TENANT_USAGE_COLUMNS = """
+ALTER TABLE public.tenant_usage
+    ADD COLUMN IF NOT EXISTS input_tokens  BIGINT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS output_tokens BIGINT NOT NULL DEFAULT 0;
 """
 
 
@@ -62,8 +71,9 @@ async def main() -> None:
         print("Creating public.tenants table …")
         await conn.execute(_CREATE_TENANTS_TABLE)
 
-        print("Creating public.tenant_usage table …")
+        print("Creating/updating public.tenant_usage table …")
         await conn.execute(_CREATE_TENANT_USAGE_TABLE)
+        await conn.execute(_MIGRATE_TENANT_USAGE_COLUMNS)
 
         print("✓ Database setup complete.")
     finally:

@@ -40,6 +40,8 @@ class TenantUsageResponse(BaseModel):
     tenant_id: str
     period_month: str  # ISO date string e.g. "2026-03-01"
     tokens_used: int
+    input_tokens: int
+    output_tokens: int
     token_quota: int
     percent_used: float
     estimated_cost_usd: float

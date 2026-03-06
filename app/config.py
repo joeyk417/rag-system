@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     token_quota_professional: int = 2_000_000
     token_quota_enterprise: int = 10_000_000
 
+    # Token cost rates (USD per 1k tokens — set to match your LLM model's pricing)
+    # Defaults: gpt-4o-mini ($0.15/1M input, $0.60/1M output)
+    token_cost_input_per_1k: float = 0.00015
+    token_cost_output_per_1k: float = 0.0006
+
     # Database
     database_url: str = Field(default="postgresql+asyncpg://raguser:ragpass@localhost:5432/ragdb")
 

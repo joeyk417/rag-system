@@ -296,7 +296,9 @@ export default function AdminPage() {
                 <tr>
                   <th className="px-4 py-3 text-left">Tenant</th>
                   <th className="px-4 py-3 text-left">Period</th>
-                  <th className="px-4 py-3 text-right">Tokens Used</th>
+                  <th className="px-4 py-3 text-right">Input</th>
+                  <th className="px-4 py-3 text-right">Output</th>
+                  <th className="px-4 py-3 text-right">Total</th>
                   <th className="px-4 py-3 text-right">Quota</th>
                   <th className="px-4 py-3 text-left w-40">% Used</th>
                   <th className="px-4 py-3 text-right">Est. Cost</th>
@@ -306,7 +308,7 @@ export default function AdminPage() {
               <tbody>
                 {usage.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">
+                    <td colSpan={9} className="px-4 py-10 text-center text-sm text-slate-400">
                       No usage data for the current month.
                     </td>
                   </tr>
@@ -315,7 +317,13 @@ export default function AdminPage() {
                     <tr key={u.tenant_id} className="border-t border-slate-100 hover:bg-slate-50">
                       <td className="px-4 py-3 font-mono text-xs font-medium">{u.tenant_id}</td>
                       <td className="px-4 py-3 text-xs text-slate-400">{u.period_month}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-4 py-3 text-right tabular-nums text-xs">
+                        {u.input_tokens.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-xs">
+                        {u.output_tokens.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-medium">
                         {u.tokens_used.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-slate-400">
